@@ -6,11 +6,11 @@ program cable
 use new_library ;use geometry_lib;use gebeam ;use libks ;use vlib;implicit none 
 !----------------------------static variables----------------------------------
 integer::nels,neq,nn,nband,nr,nod=2,nodof=6,ndof=12,iel,i,j,k,ndim=3,  &
-		nip1,nip2,LIMIT,iters,loaded_nodes,stat,ocean_step,incs,iy;	
+		nip1,nip2,LIMIT,iters,loaded_nodes,stat,ocean_step,incs,iy,range,kkk;	
 real::beta,gamma,dt,dt0,EA,GA2,GA3,GJ,EI2,EI3,jacobi,fi,fi1,fi2,ell,ts,area,rhoaw,&
 		rhoac,diacab,alpha1,alpha2,alpha3,alpha4,alpha5,alpha6,cd1,cd2,TOL,factfun,&
 		amp,omego,period,jtensor1,jtensor2,jtensor3,perwet,permass,masscage,cfcage,&
-		alpha_m,alpha_f,spradius,factor;
+		alpha_m,alpha_f,spradius,factor,float_force,floatMass;
 character(len=15) :: element = 'line'; 
 real,parameter::pi=3.1415926;
 logical::converged;
@@ -51,9 +51,26 @@ open (15 , file = 'G:\桌面\动力学模型\YXYBC3\SIACAB\Dynamic_1\General alpha 1\UM
 !open (13 , file = 'E:\YXYBC3\SIACAB\Dynamic_1\General alpha 1\UMBILICAL\ROPOS1730DATA\ROPOS1730SHIP_Dz.DAT' , status = 'old' ,    action ='read')!ROPOS 1730 测量船升沉位移，频率为10Hz.
 !open (14 , file = 'E:\YXYBC3\SIACAB\Dynamic_1\General alpha 1\UMBILICAL\ROPOS1730DATA\ROPOS1730SHIP_Vz.DAT' , status = 'old' ,    action ='read')!ROPOS 1730 测量船升沉速度，频率为10Hz.
 !open (15 , file = 'E:\YXYBC3\SIACAB\Dynamic_1\General alpha 1\UMBILICAL\ROPOS1730DATA\ROPOS1730SHIP_Az.DAT' , status = 'old' ,    action ='read')!ROPOS 1730 测量船升沉加速度，频率为10Hz.
-open (16 , file = 'D:\测试代码\Fortran\cableStaticTest1\cableStaticTest1\Data\D17.3 4000无浮子 无末端结点 无海流 静态.res', status = 'old' , action ='read');!读取静态分析的结果作为动态分析的初始值。
-open (10 , file = 'data\ROPOS_4000_17.3.dat' , status = 'old' ,action ='read');!读ROPOS系统参数
-open (12 , file = 'G:\桌面\动力学模型\YXYBC3\postData\UMBILICAL\DY_DATA\D17.3_4000_无浮子__无海流_正弦升沉_有ROV质量.csv' , status = 'replace', action='write')
+open (16 , file = 'D:\测试代码\Fortran\cableStaticTest1\cableStaticTest1\Data\D17.3 6000无浮子 无中继器 无海流 静态.res', status = 'old' , action ='read');!读取静态分析的结果作为动态分析的初始值。
+open (10 , file = 'data\ROPOS_6000_17.3.dat' , status = 'old' ,action ='read');!读ROPOS系统参数
+open (12 , file = 'G:\桌面\动力学模型\YXYBC3\postData\UMBILICAL\DY_DATA\D17.3_6000_10结点浮子__无海流_正弦升沉_有ROV质量.csv' , status = 'replace', action='write')
+
+
+    float_force = -60;
+    range = 300;
+    loaded_nodes = 10;
+    floatMass = 15
+
+    allocate(no(loaded_nodes),val(loaded_nodes,nodof));    
+    do kkk = 1,loaded_nodes
+    !末尾加的数值是起始深度,(kkk-1)的系数是间隔米数
+        no(kkk) =  1*(kkk-1)+range
+    end do
+    !结点力矩阵赋初值
+    val(:,:) = 0;
+    !每个节点上的结点力
+    val(:,1) = float_force; 
+
 
 !read(13, FMT = "(f15.5)", IOSTAT = stat, ADVANCE = 'YES')ocean_disp; !注意：读取文件的大小与相应的存储数组大小应一致。
 	if(stat<0)then
@@ -172,8 +189,9 @@ allocate(tkm(neq,(2*nband+1)),tmm(neq,(2*nband+1)),tgykm(neq,(2*nband+1)),tctkm(
 	!write(11,*)loads;
 	
 	!下面的加载适用于增量载荷法，适用于在时间步内重新指定载荷
-	read(10,*)loaded_nodes; allocate(no(loaded_nodes),val(loaded_nodes,nodof)); 
-	read(10,*)(no(i),val(i,:),i=1,loaded_nodes);!节点载荷值
+	read(10,*)loaded_nodes; 
+    !allocate(no(loaded_nodes),val(loaded_nodes,nodof)); 
+	!read(10,*)(no(i),val(i,:),i=1,loaded_nodes);!节点载荷值
 	!载荷增量步数incs
 	!read(10,*)incs; allocate(factors(incs)); 
 	!do i=1,incs; factors(i)=i*1.0/incs; end do
@@ -241,7 +259,7 @@ timeloop:do while(ts<=50.0) !自适应步长 dt
 			if(iters>5)then;dt0 =dt0/1.01;cycle timeloop;end if !迭代次数增加时，要减少步长;
 				write(11,"(a,i5)")"the main iters:-----",iters;	
 			loads=0.0;
-			do i = 1,loaded_nodes; loads(nf(:,no(i)))=val(i,:); end do										
+			!do i = 1,loaded_nodes; loads(nf(:,no(i)))=val(i,:); end do										
 			tkm=0.0;tmm=0.0;tgykm=0.0;tctkm=0.0;kcr=0;rloads=0;
 			!总体质量、刚度矩阵在每次迭代中更新
 			do iel = 1,nels
@@ -504,7 +522,10 @@ timeloop:do while(ts<=50.0) !自适应步长 dt
 			d0 = ttd;
 			v0 = ttv;
 			a0 = tta;
-			
+!------------------------修改结点力-------------------
+            val(:,1) = -200-floatMass*a0(range*6+1:(range+loaded_nodes)*6+1:6);            
+!------------------------------------------------------
+            
 			!当收敛后，求单元内部节点力,也即铠缆张力
 			tt_intfc = 0.0;
 			do iel = 1,nels
