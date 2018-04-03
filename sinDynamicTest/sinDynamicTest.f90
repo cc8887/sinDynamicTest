@@ -44,9 +44,7 @@ real,allocatable::ekm(:,:),ekm_g(:,:),emm(:,:),egykm(:,:),ectkm(:,:),tkm(:,:),tm
 integer,allocatable::nf(:,:),num(:),g_num(:,:),g(:), g_g(:,:);
 				 
 !-----------------------input and initialisation-------------------------------
-!open (10 , file = 'cable.dat' , status = 'old' ,    action ='read')
 open (11 , file = 'cable.res' , status = 'replace', action='write')
-!open (12 , file = 'data\dynamic_a.csv' , status = 'replace', action='write')
 open (13 , file = 'G:\桌面\动力学模型\YXYBC3\SIACAB\Dynamic_1\General alpha 1\UMBILICAL\data back\ocean_1\ocean_1_disp.txt' , status = 'old' ,    action ='read')!船测量的船升沉位移，频率为10Hz.
 open (14 , file = 'G:\桌面\动力学模型\YXYBC3\SIACAB\Dynamic_1\General alpha 1\UMBILICAL\data back\ocean_1\ocean_1_vel.txt' , status = 'old' ,    action ='read')!船测量的船升沉速度，频率为10Hz.
 open (15 , file = 'G:\桌面\动力学模型\YXYBC3\SIACAB\Dynamic_1\General alpha 1\UMBILICAL\data back\ocean_1\ocean_1_acc.txt' , status = 'old' ,    action ='read')!船测量的船升沉加速度，频率为10Hz.
@@ -55,7 +53,6 @@ open (15 , file = 'G:\桌面\动力学模型\YXYBC3\SIACAB\Dynamic_1\General alpha 1\UM
 !open (15 , file = 'E:\YXYBC3\SIACAB\Dynamic_1\General alpha 1\UMBILICAL\ROPOS1730DATA\ROPOS1730SHIP_Az.DAT' , status = 'old' ,    action ='read')!ROPOS 1730 测量船升沉加速度，频率为10Hz.
 open (16 , file = 'D:\测试代码\Fortran\cableStaticTest1\cableStaticTest1\Data\D17.3 4000无浮子 无末端结点 无海流 静态.res', status = 'old' , action ='read');!读取静态分析的结果作为动态分析的初始值。
 open (10 , file = 'data\ROPOS_4000_17.3.dat' , status = 'old' ,action ='read');!读ROPOS系统参数
-!open (10 , file = 'G:\桌面\动力学模型\YXYBC3\SIACAB\Dynamic_1\General alpha 1\UMBILICAL\ROPOS_cable\ROPOS_5000.dat' , status = 'old' ,action ='read');!读ROPOS系统参数
 open (12 , file = 'G:\桌面\动力学模型\YXYBC3\postData\UMBILICAL\DY_DATA\D17.3_4000_无浮子__无海流_正弦升沉_有ROV质量.csv' , status = 'replace', action='write')
 
 !read(13, FMT = "(f15.5)", IOSTAT = stat, ADVANCE = 'YES')ocean_disp; !注意：读取文件的大小与相应的存储数组大小应一致。
