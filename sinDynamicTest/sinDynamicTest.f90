@@ -21,7 +21,7 @@ real::cst(5),cst_p(3),cnm(6,6), xc0_p(3),xc0(3),phai0(3),&
 	  rmtx(3,3),rtxc_p(3),tphai_p(3),E1_mat(3),nfc(3),mr(3),nbar(3),mrbar(3),jtensor(3,3),&
 	  bmtx(6,9),t2ev(12,12),t2em1(12,12),t2em2(12,12),rmtx0_nd1(3,3),rmtx0_nd2(3,3),&
 	  rmtx_nd1(3,3),rmtx_nd2(3,3),tmtx_nd1(3,3),tmtx_nd2(3,3),dertf(3,3),&
-	  ocean_disp(1516),ocean_vel(1516),ocean_acc(1516),wtvelo(3),wtvel(3);
+	  ocean_disp(1516),ocean_vel(1516),ocean_acc(1516),wtvelo(3),wtvel(3),tamp_jtensor(3,3);
 !--------------------------dynamic arrays--------------------------------------
 !real,allocatable::ekm(:,:),ekm_g(:,:),emm(:,:),egykm(:,:),ectkm(:,:),tkm(:),tmm(:),&
 !				  tgykm(:),tctkm(:),d0(:),v0(:),a0(:),acc0(:),points1(:,:),points2(:,:),der(:),der0(:),&
@@ -40,7 +40,7 @@ real,allocatable::ekm(:,:),ekm_g(:,:),emm(:,:),egykm(:,:),ectkm(:,:),tkm(:,:),tm
 				  dxc(:),d2xc(:),phai(:),dphai(:),d2phai(:),phai_p(:),no(:),val(:,:),&
 				  tkm_bck(:,:),tmm_bck(:,:),tldkm_bck(:,:),rloads_bck(:),coord(:,:),&
 				  kiter(:,:),cdmtx(:,:),temp1(:),temp2(:),temp3(:),temp4(:),mtemp(:),ctemp(:),delta(:),g_coord(:,:) ,&
-				  work(:,:),copy(:,:),factors(:);
+				  work(:,:),copy(:,:),factors(:),allNfc(:);
 integer,allocatable::nf(:,:),num(:),g_num(:,:),g(:), g_g(:,:);
 				 
 !-----------------------input and initialisation-------------------------------
@@ -53,7 +53,8 @@ open (15 , file = 'G:\桌面\动力学模型\YXYBC3\SIACAB\Dynamic_1\General alpha 1\UM
 !open (15 , file = 'E:\YXYBC3\SIACAB\Dynamic_1\General alpha 1\UMBILICAL\ROPOS1730DATA\ROPOS1730SHIP_Az.DAT' , status = 'old' ,    action ='read')!ROPOS 1730 测量船升沉加速度，频率为10Hz.
 open (16 , file = 'D:\测试代码\Fortran\cableStaticTest1\cableStaticTest1\Data\D17.3 6000无浮子 无中继器 无海流 静态.res', status = 'old' , action ='read');!读取静态分析的结果作为动态分析的初始值。
 open (10 , file = 'data\ROPOS_6000_17.3.dat' , status = 'old' ,action ='read');!读ROPOS系统参数
-open (12 , file = 'G:\桌面\动力学模型\YXYBC3\postData\UMBILICAL\DY_DATA\D17.3_6000_10结点浮子__无海流_正弦升沉_有ROV质量.csv' , status = 'replace', action='write')
+!open (12 , file = 'G:\桌面\动力学模型\YXYBC3\postData\UMBILICAL\DY_DATA\D17.3_6000_10单元浮子__无海流_正弦升沉_有ROV质量_有内应力版.csv' , status = 'replace', action='write')
+open (12 , file = 'G:\桌面\动力学模型\YXYBC3\postData\UMBILICAL\DY_DATA\test.csv' , status = 'replace', action='write')
 
 
     float_force = -60;
@@ -69,10 +70,11 @@ open (12 , file = 'G:\桌面\动力学模型\YXYBC3\postData\UMBILICAL\DY_DATA\D17.3_60
     !结点力矩阵赋初值
     val(:,:) = 0;
     !每个节点上的结点力
-    val(:,1) = float_force; 
+   ! val(:,1) = float_force; 
+     val(:,1) = float_force-floatMass*10; !这一项用于结点力加在单元上
 
 
-!read(13, FMT = "(f15.5)", IOSTAT = stat, ADVANCE = 'YES')ocean_disp; !注意：读取文件的大小与相应的存储数组大小应一致。
+read(13, FMT = "(f15.5)", IOSTAT = stat, ADVANCE = 'YES')ocean_disp; !注意：读取文件的大小与相应的存储数组大小应一致。
 	if(stat<0)then
 		write(*,*)"已到文件ocean_1_disp.txt末尾,END";!直接打印到屏幕
 	else if(stat==0)then
@@ -82,7 +84,7 @@ open (12 , file = 'G:\桌面\动力学模型\YXYBC3\postData\UMBILICAL\DY_DATA\D17.3_60
 	end if	
 	!write(11,"(f15.5)")ocean_disp;
 	!write(11,*)"ocean_disp output endline---------------------------------------------------"
-!read(14, FMT = "(f15.5)", IOSTAT = stat, ADVANCE = 'YES')ocean_vel; !注意：读取文件的大小与相应的存储数组大小应一致。
+read(14, FMT = "(f15.5)", IOSTAT = stat, ADVANCE = 'YES')ocean_vel; !注意：读取文件的大小与相应的存储数组大小应一致。
 	if(stat<0)then
 		write(*,*)"已到文件ocean_1_vel.txt末尾,END";!直接打印到屏幕
 	else if(stat==0)then
@@ -92,7 +94,7 @@ open (12 , file = 'G:\桌面\动力学模型\YXYBC3\postData\UMBILICAL\DY_DATA\D17.3_60
 	end if	
 	!write(11,"(f15.5)")ocean_vel;
 	!write(11,*)"ocean_vel output endline====================================================="
-!read(15, FMT = "(f15.5)", IOSTAT = stat, ADVANCE = 'YES')ocean_acc; !注意：读取文件的大小与相应的存储数组大小应一致。
+read(15, FMT = "(f15.5)", IOSTAT = stat, ADVANCE = 'YES')ocean_acc; !注意：读取文件的大小与相应的存储数组大小应一致。
 	if(stat<0)then
 		write(*,*)"已到文件ocean_1_acc.txt末尾,END";!直接打印到屏幕
 	else if(stat==0)then
@@ -119,6 +121,9 @@ read(10,*)jtensor1,jtensor2,jtensor3;
 		jtensor=0;
 		jtensor(1,1)=jtensor1;jtensor(2,2)=jtensor2;jtensor(3,3)=jtensor3;
 
+        tamp_jtensor = jtensor;
+        
+        
 		!alpha1=1.0/(beta*dt*dt);
 		!alpha2=1.0/(beta*dt);
 		!alpha3=(1-2*beta)/(2*beta);
@@ -137,7 +142,7 @@ allocate(ekm(ndof,ndof),emm(ndof,ndof),egykm(ndof,ndof),ectkm(ndof,ndof),nf(nodo
 		 elxc(nod,ndim),eldd(nod,ndim),eldxc(nod,ndim),eld2xc(nod,ndim),&
 		 elphai(nod,ndim),c_elphai(nod,ndim),eldphai(nod,ndim),eld2phai(nod,ndim),&
 		 xc(ndim),xc_p(ndim),dd(ndim),dxc(ndim),d2xc(ndim),&		 
-		 phai(ndim),dphai(ndim),d2phai(ndim),phai_p(ndim));
+		 phai(ndim),dphai(ndim),d2phai(ndim),phai_p(ndim),allNfc(nn));
 		 
 eyee=0;forall(i=1:3,j=1:3,i==j)eyee(i,j)=1 !设置单位矩阵
 
@@ -223,12 +228,12 @@ allocate(tkm(neq,(2*nband+1)),tmm(neq,(2*nband+1)),tgykm(neq,(2*nband+1)),tctkm(
 	!wtvelo = (/0.0,0.5,0.0/);
 	wtvel = (/0.0,0.0,0.8/);
 	!wtvel = 0.0;
-	!ocean_step =1;
+	ocean_step =1;
 	
 	write(*,*)"开始进入时间步循环："
 	ts =0.0;
 !timeloop:do ts=0,30,dt	
-timeloop:do while(ts<=50.0) !自适应步长 dt
+timeloop:do while(ts<=100.0) !自适应步长 dt
 	if(dt0<=0.0)then;write(*,*)"时间步长<0,退出!!!";exit timeloop;end if 
 	!if(dt0<=0.0001)then;dt0 = 0.01;end if
 	dt =dt0;
@@ -283,18 +288,18 @@ timeloop:do while(ts<=50.0) !自适应步长 dt
 					ttv_a(g(2:3))=0.0;ttv_a(g(4:6))=0.0;
 					tta_a(g(2:3))=0.0;tta_a(g(4:6))=0.0;
 					
-					ttd(g(1)) = -amp*sin(omego*(ts+dt));
-					ttv(g(1)) = -amp*omego*cos(omego*(ts+dt));
-					tta(g(1)) = amp*omego*omego*sin(omego*(ts+dt));	
+				!	ttd(g(1)) = -amp*sin(omego*(ts+dt));
+				!	ttv(g(1)) = -amp*omego*cos(omego*(ts+dt));
+				!	tta(g(1)) = amp*omego*omego*sin(omego*(ts+dt));	
 					
-					ttd_a(g(1)) = -((1-alpha_f)*amp*sin(omego*(ts+dt))+alpha_f*amp*sin(omego*(ts)));
-					ttv_a(g(1)) = -((1-alpha_f)*amp*omego*cos(omego*(ts+dt))+alpha_f*amp*omego*cos(omego*(ts)));
-					tta_a(g(1)) = (1-alpha_m)*amp*omego*omego*sin(omego*(ts+dt))+alpha_m*amp*omego*omego*sin(omego*(ts));	
+				!	ttd_a(g(1)) = -((1-alpha_f)*amp*sin(omego*(ts+dt))+alpha_f*amp*sin(omego*(ts)));
+				!	ttv_a(g(1)) = -((1-alpha_f)*amp*omego*cos(omego*(ts+dt))+alpha_f*amp*omego*cos(omego*(ts)));
+				!	tta_a(g(1)) = (1-alpha_m)*amp*omego*omego*sin(omego*(ts+dt))+alpha_m*amp*omego*omego*sin(omego*(ts));	
 					
 					!船实际测量母船升沉数据，频率10Hz.
-					!ttd(g(1)) = -ocean_disp(ocean_step);
-					!ttv(g(1)) = -ocean_vel(ocean_step);
-					!tta(g(1)) = -ocean_acc(ocean_step);					
+					ttd(g(1)) = -ocean_disp(ocean_step);
+					ttv(g(1)) = -ocean_vel(ocean_step);
+					tta(g(1)) = -ocean_acc(ocean_step);					
 				end if
 				
 				! extract the displacement of an element from the total
@@ -336,7 +341,21 @@ timeloop:do while(ts<=50.0) !自适应步长 dt
 					CALL rtmtx_get(rmtx,tmtx,phai,fi);!求从材料基至运动基转动矩阵rmtx,tmtx;																																			
 					rtxc_p=matmul(transpose(rmtx),xc_p);																		
 					tphai_p = matmul(tmtx,phai_p);
-					
+				
+!--------------------------------------固定浮子用此处----------------------------------------------
+                    if(iel>=range.and.iel<=range+loaded_nodes)then
+                        perwet = 9.53 + floatMass/10*10;
+                       ! perwet = 9.53
+                        !cd = (/0.08,8.0,8.0/);
+                        jtensor = tamp_jtensor*(9.53+2000)/9.53*1400
+                       ! jtensor = tamp_jtensor
+                    else
+                       perwet = 9.53;
+                       !cd = (/0.02,2.0,2.0/);
+                       jtensor = tamp_jtensor;
+                    end if
+!-------------------------------------------------------  
+                    
 					!求解单位参考长梁截面合应力与合应力偶
 					CALL nfcmr_get(nfc,mr,cnm,rtxc_p,tphai_p);!当E1=(1,0,0)时
 					!求解单位参考长梁截面合外力与合外力偶									
@@ -523,7 +542,7 @@ timeloop:do while(ts<=50.0) !自适应步长 dt
 			v0 = ttv;
 			a0 = tta;
 !------------------------修改结点力-------------------
-            val(:,1) = -200-floatMass*a0(range*6+1:(range+loaded_nodes)*6+1:6);            
+         !   val(:,1) = -200-floatMass*a0(range*6+1:(range+loaded_nodes)*6+1:6);            
 !------------------------------------------------------
             
 			!当收敛后，求单元内部节点力,也即铠缆张力
@@ -559,11 +578,22 @@ timeloop:do while(ts<=50.0) !自适应步长 dt
 					!单元内部节点力(12,1)
 					CALL intfcmx_get(intfcmx,nfc,mr);
 					eintfc = eintfc + matmul(transpose(matmul(bmtx,qmtx)),intfcmx)*jacobi*weights1(k);							
-				end do
 				
-				g=g_g(:,iel);
-				tt_intfc(g) = tt_intfc(g)+0.0-eintfc;
-				
+!--------------------------------------取内部结点力及应力、应力偶---------------------------------------------
+                   ! eintfc_tamp = 	matmul(transpose(matmul(bmtx,qmtx)),intfcmx)*jacobi*weights(k);
+                    allNfc(iel) = sqrt(dot_product(nfc,nfc)); 
+                    !allMr(iel) = sqrt(dot_product(mr,mr));
+                    !allMr(iel) = abs(bmtx)
+!----------------------------------------------------------------------------------------------------
+                
+                end do
+                g=g_g(:,iel);
+				if(iel<nels)then
+                    tt_intfc(g(1:6)) = tt_intfc(g(1:6))+0.0+eintfc(1:6);
+                else then
+                    tt_intfc(g) =   tt_intfc(g)+0.0+eintfc;
+                end if
+                    
 			end do !nels when converged
 			
 			!换两行后输出
@@ -572,16 +602,16 @@ timeloop:do while(ts<=50.0) !自适应步长 dt
 			write(11,'(a)')"NODE:                     DISPLACEMENT:        "
 			do i=1,nn
 				write(11,"(f10.3,i5,6e12.4),//") ts,i,d0(nf(1:3,i));
-				write(12,"(f10.3,',',i5,',',3(e15.6,','),3(e15.6,','),3(e15.6,','),3(e15.6,','),e15.6)") ts,i,d0(nf(1:3,i))+g_coord(:,i),d0(nf(1:3,i)),v0(nf(1:3,i)),a0(nf(1:3,i)),tt_intfc(nf(1,i));!保存文件为.csv格式
+				write(12,"(f10.3,',',i5,',',3(e15.6,','),3(e15.6,','),3(e15.6,','),3(e15.6,','),(e15.6,','),e15.6)") ts,i,d0(nf(1:3,i))+g_coord(:,i),d0(nf(1:3,i)),v0(nf(1:3,i)),a0(nf(1:3,i)),tt_intfc(nf(1,i)),allNfc(i);!保存文件为.csv格式
 			end do
 		if(iters == limit)then
 			write(11,"(a)")"The iterations has overpassed the LIMIT number!";
 			exit timeloop;
 		end if 
-	!ocean_step = ocean_step+1;	
+	ocean_step = ts/0.1+1;	
 	ts = ts + dt ;	
 		write(*,*)"The current time is:",ts;
-	if(iters<2)then;dt0 = dt0*2.0;write(11,*)"The dt is added at last!";end if !迭代次数减少时，要增加步长;
+	if(iters<2.and.dt0<0.1)then;dt0 = dt0*2.0;write(11,*)"The dt is added at last!";end if !迭代次数减少时，要增加步长;
 		!write(11,"(a,i5)")"the main iters:-----",iters;		
 end do timeloop
 end program cable
