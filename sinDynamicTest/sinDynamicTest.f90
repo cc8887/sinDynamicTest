@@ -54,6 +54,7 @@ open (15 , file = 'G:\桌面\动力学模型\YXYBC3\SIACAB\Dynamic_1\General alpha 1\UM
 open (16 , file = 'D:\测试代码\Fortran\cableStaticTest1\cableStaticTest1\Data\D17.3 6000无浮子 无中继器 无海流 静态.res', status = 'old' , action ='read');!读取静态分析的结果作为动态分析的初始值。
 open (10 , file = 'data\ROPOS_6000_17.3.dat' , status = 'old' ,action ='read');!读ROPOS系统参数
 open (12 , file = 'G:\桌面\动力学模型\YXYBC3\postData\UMBILICAL\DY_DATA\D17.3_6000_30结点浮子__无海流_正弦升沉_有ROV质量.csv' , status = 'replace', action='write')
+open (17 , file = 'G:\桌面\动力学模型\YXYBC3\postData\UMBILICAL\DY_DATA\D17.3_6000_30结点浮子__无海流_正弦升沉_有ROV质量_首末节点.csv' , status = 'replace', action='write')
 
 
     float_force = -60;
@@ -189,7 +190,7 @@ allocate(tkm(neq,(2*nband+1)),tmm(neq,(2*nband+1)),tgykm(neq,(2*nband+1)),tctkm(
 	!write(11,*)loads;
 	
 	!下面的加载适用于增量载荷法，适用于在时间步内重新指定载荷
-	read(10,*)loaded_nodes; 
+	!read(10,*)loaded_nodes; 
     !allocate(no(loaded_nodes),val(loaded_nodes,nodof)); 
 	!read(10,*)(no(i),val(i,:),i=1,loaded_nodes);!节点载荷值
 	!载荷增量步数incs
@@ -573,7 +574,8 @@ timeloop:do while(ts<=50.0) !自适应步长 dt
 			do i=1,nn
 				write(11,"(f10.3,i5,6e12.4),//") ts,i,d0(nf(1:3,i));
 				write(12,"(f10.3,',',i5,',',3(e15.6,','),3(e15.6,','),3(e15.6,','),3(e15.6,','),e15.6)") ts,i,d0(nf(1:3,i))+g_coord(:,i),d0(nf(1:3,i)),v0(nf(1:3,i)),a0(nf(1:3,i)),tt_intfc(nf(1,i));!保存文件为.csv格式
-			end do
+            end do
+            write(17,"(f10.3,','(e15.6,','),(e15.6,','),(e15.6,','),(e15.6,','))")ts,d0(nf(1,1)),tt_intfc(nf(1,1)),d0(nf(1,nn)),tt_intfc(nf(1,nn))
 		if(iters == limit)then
 			write(11,"(a)")"The iterations has overpassed the LIMIT number!";
 			exit timeloop;
