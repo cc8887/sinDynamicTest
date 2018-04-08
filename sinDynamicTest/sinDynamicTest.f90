@@ -53,12 +53,12 @@ open (15 , file = 'G:\桌面\动力学模型\YXYBC3\SIACAB\Dynamic_1\General alpha 1\UM
 !open (15 , file = 'E:\YXYBC3\SIACAB\Dynamic_1\General alpha 1\UMBILICAL\ROPOS1730DATA\ROPOS1730SHIP_Az.DAT' , status = 'old' ,    action ='read')!ROPOS 1730 测量船升沉加速度，频率为10Hz.
 open (16 , file = 'D:\测试代码\Fortran\cableStaticTest1\cableStaticTest1\Data\D17.3 6000无浮子 无中继器 无海流 静态.res', status = 'old' , action ='read');!读取静态分析的结果作为动态分析的初始值。
 open (10 , file = 'data\ROPOS_6000_17.3.dat' , status = 'old' ,action ='read');!读ROPOS系统参数
-open (12 , file = 'G:\桌面\动力学模型\YXYBC3\postData\UMBILICAL\DY_DATA\D17.3_6000_无结点浮子__无海流_大洋升沉_无ROV质量.csv' , status = 'replace', action='write')
+open (12 , file = 'G:\桌面\动力学模型\YXYBC3\postData\UMBILICAL\DY_DATA\D17.3_6000_30结点浮子__无海流_正弦升沉_有ROV质量.csv' , status = 'replace', action='write')
 
 
     float_force = -60;
-    range = 700;
-    loaded_nodes = 0;
+    range = 300;
+    loaded_nodes = 30;
     floatMass = 15
 
     allocate(no(loaded_nodes),val(loaded_nodes,nodof));    
@@ -228,7 +228,7 @@ allocate(tkm(neq,(2*nband+1)),tmm(neq,(2*nband+1)),tgykm(neq,(2*nband+1)),tctkm(
 	write(*,*)"开始进入时间步循环："
 	ts =0.0;
 !timeloop:do ts=0,30,dt	
-timeloop:do while(ts<=100.0) !自适应步长 dt
+timeloop:do while(ts<=50.0) !自适应步长 dt
 	if(dt0<=0.0)then;write(*,*)"时间步长<0,退出!!!";exit timeloop;end if 
 	!if(dt0<=0.0001)then;dt0 = 0.01;end if
 	dt =dt0;
@@ -259,7 +259,7 @@ timeloop:do while(ts<=100.0) !自适应步长 dt
 			if(iters>5)then;dt0 =dt0/1.01;cycle timeloop;end if !迭代次数增加时，要减少步长;
 				write(11,"(a,i5)")"the main iters:-----",iters;	
 			loads=0.0;
-			!do i = 1,loaded_nodes; loads(nf(:,no(i)))=val(i,:); end do										
+			do i = 1,loaded_nodes; loads(nf(:,no(i)))=val(i,:); end do										
 			tkm=0.0;tmm=0.0;tgykm=0.0;tctkm=0.0;kcr=0;rloads=0;
 			!总体质量、刚度矩阵在每次迭代中更新
 			do iel = 1,nels
@@ -283,18 +283,18 @@ timeloop:do while(ts<=100.0) !自适应步长 dt
 					ttv_a(g(2:3))=0.0;ttv_a(g(4:6))=0.0;
 					tta_a(g(2:3))=0.0;tta_a(g(4:6))=0.0;
 					
-					!ttd(g(1)) = -amp*sin(omego*(ts+dt));
-					!ttv(g(1)) = -amp*omego*cos(omego*(ts+dt));
-					!tta(g(1)) = amp*omego*omego*sin(omego*(ts+dt));	
+					ttd(g(1)) = -amp*sin(omego*(ts+dt));
+					ttv(g(1)) = -amp*omego*cos(omego*(ts+dt));
+					tta(g(1)) = amp*omego*omego*sin(omego*(ts+dt));	
 					
-					!ttd_a(g(1)) = -((1-alpha_f)*amp*sin(omego*(ts+dt))+alpha_f*amp*sin(omego*(ts)));
-					!ttv_a(g(1)) = -((1-alpha_f)*amp*omego*cos(omego*(ts+dt))+alpha_f*amp*omego*cos(omego*(ts)));
-					!tta_a(g(1)) = (1-alpha_m)*amp*omego*omego*sin(omego*(ts+dt))+alpha_m*amp*omego*omego*sin(omego*(ts));	
+					ttd_a(g(1)) = -((1-alpha_f)*amp*sin(omego*(ts+dt))+alpha_f*amp*sin(omego*(ts)));
+					ttv_a(g(1)) = -((1-alpha_f)*amp*omego*cos(omego*(ts+dt))+alpha_f*amp*omego*cos(omego*(ts)));
+					tta_a(g(1)) = (1-alpha_m)*amp*omego*omego*sin(omego*(ts+dt))+alpha_m*amp*omego*omego*sin(omego*(ts));	
 					
 					!船实际测量母船升沉数据，频率10Hz.
-					ttd(g(1)) = -ocean_disp(ocean_step);
-					ttv(g(1)) = -ocean_vel(ocean_step);
-					tta(g(1)) = -ocean_acc(ocean_step);					
+					!ttd(g(1)) = -ocean_disp(ocean_step);
+					!ttv(g(1)) = -ocean_vel(ocean_step);
+					!tta(g(1)) = -ocean_acc(ocean_step);					
 				end if
 				
 				! extract the displacement of an element from the total
@@ -523,7 +523,7 @@ timeloop:do while(ts<=100.0) !自适应步长 dt
 			v0 = ttv;
 			a0 = tta;
 !------------------------修改结点力-------------------
-            val(:,1) = -200-floatMass*a0(range*6+1:(range+loaded_nodes)*6+1:6);            
+            val(:,1) = float_force-floatMass*a0(range*6+1:(range+loaded_nodes)*6+1:6);            
 !------------------------------------------------------
             
 			!当收敛后，求单元内部节点力,也即铠缆张力
@@ -562,7 +562,7 @@ timeloop:do while(ts<=100.0) !自适应步长 dt
 				end do
 				
 				g=g_g(:,iel);
-				tt_intfc(g) = tt_intfc(g)+0.0-eintfc;
+				tt_intfc(g) = -eintfc;
 				
 			end do !nels when converged
 			
