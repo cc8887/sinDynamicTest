@@ -53,8 +53,10 @@ open (15 , file = 'G:\桌面\动力学模型\YXYBC3\SIACAB\Dynamic_1\General alpha 1\UM
 !open (15 , file = 'E:\YXYBC3\SIACAB\Dynamic_1\General alpha 1\UMBILICAL\ROPOS1730DATA\ROPOS1730SHIP_Az.DAT' , status = 'old' ,    action ='read')!ROPOS 1730 测量船升沉加速度，频率为10Hz.
 open (16 , file = 'D:\测试代码\Fortran\cableStaticTest1\cableStaticTest1\Data\D17.3 6000无浮子 无中继器 无海流 静态.res', status = 'old' , action ='read');!读取静态分析的结果作为动态分析的初始值。
 open (10 , file = 'data\ROPOS_6000_17.3.dat' , status = 'old' ,action ='read');!读ROPOS系统参数
-open (12 , file = 'G:\桌面\动力学模型\YXYBC3\postData\UMBILICAL\DY_DATA\D17.3_6000_30结点浮子__无海流_正弦升沉_有ROV质量.csv' , status = 'replace', action='write')
-open (17 , file = 'G:\桌面\动力学模型\YXYBC3\postData\UMBILICAL\DY_DATA\D17.3_6000_30结点浮子__无海流_正弦升沉_有ROV质量_首末节点.csv' , status = 'replace', action='write')
+open (12 , file = 'G:\桌面\动力学模型\YXYBC3\postData\UMBILICAL\DY_DATA\&
+    D17.3_6000_30结点浮子__无海流_正弦升沉_有ROV质量.csv' , status = 'replace', action='write')
+open (17 , file = 'G:\桌面\动力学模型\YXYBC3\postData\UMBILICAL\DY_DATA\&
+    D17.3_6000_30结点浮子__无海流_正弦升沉_有ROV质量_首末节点.csv' , status = 'replace', action='write')
 
 
     float_force = -60;
