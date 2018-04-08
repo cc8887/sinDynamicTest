@@ -297,7 +297,10 @@ timeloop:do while(ts<=50.0) !自适应步长 dt
 					!船实际测量母船升沉数据，频率10Hz.
 					!ttd(g(1)) = -ocean_disp(ocean_step);
 					!ttv(g(1)) = -ocean_vel(ocean_step);
-					!tta(g(1)) = -ocean_acc(ocean_step);					
+					!tta(g(1)) = -ocean_acc(ocean_step);
+                    !ttd_a(g(1)) = -((1-alpha_f)*ocean_disp(ocean_step+1)+alpha_f*ocean_disp(ocean_step));
+					!ttv_a(g(1)) = -((1-alpha_f)*ocean_vel(ocean_step+1)+alpha_f*ocean_vel(ocean_step));
+					!tta_a(g(1)) = -((1-alpha_m)*ocean_acc(ocean_step+1)+alpha_m*ocean_acc(ocean_step));
 				end if
 				
 				! extract the displacement of an element from the total
