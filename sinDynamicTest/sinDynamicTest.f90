@@ -538,7 +538,7 @@ timeloop:do while(ts<=100.0) !自适应步长 dt
 			write(11,"(a)")"The iterations has overpassed the LIMIT number!";
 			exit timeloop;
 		end if 
-	ocean_step = ocean_step+1;	
+	ocean_step = ts/0.1+1;	
 	ts = ts + dt ;	
 		write(*,*)"The current time is:",ts;
 	if(iters<2)then;dt0 = dt0*1.1;write(11,*)"The dt is added at last!";end if !迭代次数减少时，要增加步长;
