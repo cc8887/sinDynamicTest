@@ -533,7 +533,9 @@ timeloop:do while(ts<=100.0) !自适应步长 dt
 			do i=1,nn
 				write(11,"(f10.3,i5,6e12.4),//") ts,i,d0(nf(1:3,i));
 				write(12,"(f10.3,',',i5,',',3(e15.6,','),3(e15.6,','),3(e15.6,','),3(e15.6,','),e15.6)") ts,i,d0(nf(1:3,i))+g_coord(:,i),d0(nf(1:3,i)),v0(nf(1:3,i)),a0(nf(1:3,i)),tt_intfc(nf(1,i));!保存文件为.csv格式
-			end do
+            end do
+            write(17,"(f10.3,','(e15.6,','),(e15.6,','),(e15.6,','),(e15.6,','))")ts,d0(nf(1,1)),tt_intfc(nf(1,1)),d0(nf(1,nn)),tt_intfc(nf(1,nn))
+
 		if(iters == limit)then
 			write(11,"(a)")"The iterations has overpassed the LIMIT number!";
 			exit timeloop;
