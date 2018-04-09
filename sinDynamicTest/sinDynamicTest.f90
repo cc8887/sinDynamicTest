@@ -55,6 +55,7 @@ open (15 , file = 'G:\桌面\动力学模型\YXYBC3\SIACAB\Dynamic_1\General alpha 1\UM
 open (16 , file = 'data\initial_ropos_5000.res', status = 'old' , action ='read');!读取静态分析的结果作为动态分析的初始值。
 open (10 , file = 'data\ROPOS_5000.dat' , status = 'old' ,action ='read');!读ROPOS系统参数
 open (12 , file = 'file\D30_5000_无浮子__无海流_大洋升沉_有ROV质量_纽曼法.csv' , status = 'replace', action='write')
+open (17 , file = 'file\D30_5000_无浮子__无海流_大洋升沉_有ROV质量_纽曼法_首末结点.csv' , status = 'replace', action='write')
 
 
 
