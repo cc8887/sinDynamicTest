@@ -54,14 +54,14 @@ open (15 , file = 'G:\桌面\动力学模型\YXYBC3\SIACAB\Dynamic_1\General alpha 1\UM
 open (16 , file = 'D:\测试代码\Fortran\cableStaticTest1\cableStaticTest1\Data\D17.3 6000无浮子 无中继器 无海流 静态.res', status = 'old' , action ='read');!读取静态分析的结果作为动态分析的初始值。
 open (10 , file = 'data\ROPOS_6000_17.3.dat' , status = 'old' ,action ='read');!读ROPOS系统参数
 open (12 , file = 'G:\桌面\动力学模型\YXYBC3\postData\UMBILICAL\DY_DATA\&
-    D17.3_6000_30结点浮子__无海流_正弦升沉_有ROV质量.csv' , status = 'replace', action='write')
+    D17.3_6000_60结点浮子__无海流_大洋升沉_有ROV质量.csv' , status = 'replace', action='write')
 open (17 , file = 'G:\桌面\动力学模型\YXYBC3\postData\UMBILICAL\DY_DATA\&
-    D17.3_6000_30结点浮子__无海流_正弦升沉_有ROV质量_首末节点.csv' , status = 'replace', action='write')
+    D17.3_6000_60结点浮子__无海流_大洋升沉_有ROV质量_首末节点.csv' , status = 'replace', action='write')
 
 
-    float_force = -60;
+    float_force = -65;
     range = 300;
-    loaded_nodes = 30;
+    loaded_nodes = 60;
     floatMass = 15
 
     allocate(no(loaded_nodes),val(loaded_nodes,nodof));    
@@ -231,7 +231,7 @@ allocate(tkm(neq,(2*nband+1)),tmm(neq,(2*nband+1)),tgykm(neq,(2*nband+1)),tctkm(
 	write(*,*)"开始进入时间步循环："
 	ts =0.0;
 !timeloop:do ts=0,30,dt	
-timeloop:do while(ts<=50.0) !自适应步长 dt
+timeloop:do while(ts<=100.0) !自适应步长 dt
 	if(dt0<=0.0)then;write(*,*)"时间步长<0,退出!!!";exit timeloop;end if 
 	!if(dt0<=0.0001)then;dt0 = 0.01;end if
 	dt =dt0;
@@ -286,21 +286,21 @@ timeloop:do while(ts<=50.0) !自适应步长 dt
 					ttv_a(g(2:3))=0.0;ttv_a(g(4:6))=0.0;
 					tta_a(g(2:3))=0.0;tta_a(g(4:6))=0.0;
 					
-					ttd(g(1)) = -amp*sin(omego*(ts+dt));
-					ttv(g(1)) = -amp*omego*cos(omego*(ts+dt));
-					tta(g(1)) = amp*omego*omego*sin(omego*(ts+dt));	
-					
-					ttd_a(g(1)) = -((1-alpha_f)*amp*sin(omego*(ts+dt))+alpha_f*amp*sin(omego*(ts)));
-					ttv_a(g(1)) = -((1-alpha_f)*amp*omego*cos(omego*(ts+dt))+alpha_f*amp*omego*cos(omego*(ts)));
-					tta_a(g(1)) = (1-alpha_m)*amp*omego*omego*sin(omego*(ts+dt))+alpha_m*amp*omego*omego*sin(omego*(ts));	
+					!ttd(g(1)) = -amp*sin(omego*(ts+dt));
+					!ttv(g(1)) = -amp*omego*cos(omego*(ts+dt));
+					!tta(g(1)) = amp*omego*omego*sin(omego*(ts+dt));	
+					!
+					!ttd_a(g(1)) = -((1-alpha_f)*amp*sin(omego*(ts+dt))+alpha_f*amp*sin(omego*(ts)));
+					!ttv_a(g(1)) = -((1-alpha_f)*amp*omego*cos(omego*(ts+dt))+alpha_f*amp*omego*cos(omego*(ts)));
+					!tta_a(g(1)) = (1-alpha_m)*amp*omego*omego*sin(omego*(ts+dt))+alpha_m*amp*omego*omego*sin(omego*(ts));	
 					
 					!船实际测量母船升沉数据，频率10Hz.
-					!ttd(g(1)) = -ocean_disp(ocean_step);
-					!ttv(g(1)) = -ocean_vel(ocean_step);
-					!tta(g(1)) = -ocean_acc(ocean_step);
-                    !ttd_a(g(1)) = -((1-alpha_f)*ocean_disp(ocean_step+1)+alpha_f*ocean_disp(ocean_step));
-					!ttv_a(g(1)) = -((1-alpha_f)*ocean_vel(ocean_step+1)+alpha_f*ocean_vel(ocean_step));
-					!tta_a(g(1)) = -((1-alpha_m)*ocean_acc(ocean_step+1)+alpha_m*ocean_acc(ocean_step));
+					ttd(g(1)) = -ocean_disp(ocean_step+1);
+					ttv(g(1)) = -ocean_vel(ocean_step+1);
+					tta(g(1)) = -ocean_acc(ocean_step+1);
+                    ttd_a(g(1)) = -((1-alpha_f)*ocean_disp(ocean_step+1)+alpha_f*ocean_disp(ocean_step));
+					ttv_a(g(1)) = -((1-alpha_f)*ocean_vel(ocean_step+1)+alpha_f*ocean_vel(ocean_step));
+					tta_a(g(1)) = -((1-alpha_m)*ocean_acc(ocean_step+1)+alpha_m*ocean_acc(ocean_step));
 				end if
 				
 				! extract the displacement of an element from the total
