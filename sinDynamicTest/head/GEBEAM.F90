@@ -409,7 +409,7 @@ implicit none
 	integer::i,j
 	eyee=0;forall(i=1:3,j=1:3,i==j)eyee(i,j)=1;
 	
-	if(fi/=0.0)then
+	if(fi>=1e-7)then
 		dertf=dot_product(phai,dphai)*(cst(1)*eyee-cst(2)*asymmtx(phai)+cst(3)*biv(phai,phai))+ &
 			cst(4)*asymmtx(dphai)+cst(5)*(biv(phai,dphai)+biv(dphai,phai))
 	else
@@ -462,6 +462,7 @@ implicit none
 	logical,intent(out)::converged
 	  converged=.true.
 	  converged=(maxval(abs(delta))/maxval(abs(ttd))<=tol)
+     ! write(*,*) maxloc(abs(delta)),maxloc(abs(ttd)),maxval(abs(delta)),maxval(abs(ttd))
 return
 end subroutine checonverg
 !-------------------------------transformation among vector------------------------------------
@@ -670,13 +671,13 @@ implicit none
 		write(11,*)"initial rotation angle,fi2：";
 		write(11,*)fi2*180/pi;
 	
-	if(fi/=0.0)then;!GUASS点处的转动矩阵
+	if(fi>=1e-7)then;!GUASS点处的转动矩阵
 		rmtx0 = eyee+sin(fi)/fi*asymmtx(phai)+(1-cos(fi))/(fi*fi)*matmul(asymmtx(phai),asymmtx(phai))
 	else
 		rmtx0 = eyee;
 	end if
 	
-	if(fi1/=0.0)then;!单元节点处的转动矩阵
+	if(fi1>=1e-7)then;!单元节点处的转动矩阵
 		rmtx0_nd1 = eyee+sin(fi1)/fi1*asymmtx(phai1)+(1-cos(fi1))/(fi1*fi1)*matmul(asymmtx(phai1),asymmtx(phai1));
 		rmtx0_nd2 = eyee+sin(fi2)/fi2*asymmtx(phai2)+(1-cos(fi2))/(fi2*fi2)*matmul(asymmtx(phai2),asymmtx(phai2));
 	else
@@ -694,7 +695,7 @@ implicit none
 	integer::i,j;
 	
 	eyee=0;forall(i=1:3,j=1:3,i==j)eyee(i,j)=1;	
-	if(fi/=0.0)then
+	if(fi>=1e-7)then
 		rmtx = eyee+sin(fi)/fi*asymmtx(phai)+(1-cos(fi))/(fi*fi)*matmul(asymmtx(phai),asymmtx(phai));
 		tmtx = sin(fi)/fi*eyee-(1-cos(fi))/(fi**2)*asymmtx(phai)+(fi-sin(fi))/(fi**3)*biv(phai,phai);
 		!tmtx = eyee-(1-cos(fi))/fi**2*asymmtx(phai)+(fi-sin(fi))/fi**3*biv(phai,phai);
@@ -728,7 +729,7 @@ implicit none
 	real,intent(in)::fi;
 	real,intent(out)::cst(:),cst_p(:);
 	
-	if(fi/=0.0)then
+	if(fi>=1e-7)then
 		cst(1)=(fi*cos(fi)-sin(fi))/(fi**3);
 		cst(2)=(fi*sin(fi)+2*cos(fi)-2)/(fi**4);
 		cst(3)=(3*sin(fi)-2*fi-fi*cos(fi))/(fi**5);

@@ -1381,6 +1381,7 @@ subroutine formtb(kb,km,g)
   implicit none
   real,intent(in)::km(:,:); integer,intent(in)::g(:)
   real,intent(out)::kb(:,:); integer::i,j,idof,icd,iw
+  !iw¾ÍÊÇ°ë´ø¿íNband
   idof=size(km,1); iw=(size(kb,2)-1)/2
   do i=1,idof
      if(g(i)/=0) then
