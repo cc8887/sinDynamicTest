@@ -54,9 +54,9 @@ open (15 , file = 'G:\桌面\动力学模型\YXYBC3\SIACAB\Dynamic_1\General alpha 1\UM
 open (16 , file = 'D:\测试代码\Fortran\cableStaticTest1\cableStaticTest1\Data\D17.3 6000无浮子 无中继器 无海流 静态.res', status = 'old' , action ='read');!读取静态分析的结果作为动态分析的初始值。
 open (10 , file = 'data\ROPOS_6000_17.3.dat' , status = 'old' ,action ='read');!读ROPOS系统参数
 open (12 , file = 'G:\桌面\动力学模型\YXYBC3\postData\UMBILICAL\DY_DATA\&
-    D17.3_6000_60结点浮子__无海流_大洋升沉_有ROV质量.csv' , status = 'replace', action='write')
+    D17.3_6000_60结点浮子__有海流_正弦升沉_有ROV质量.csv' , status = 'replace', action='write')
 open (17 , file = 'G:\桌面\动力学模型\YXYBC3\postData\UMBILICAL\DY_DATA\&
-    D17.3_6000_60结点浮子__无海流_大洋升沉_有ROV质量_首末节点.csv' , status = 'replace', action='write')
+    D17.3_6000_60结点浮子__有海流_正弦升沉_有ROV质量_首末节点.csv' , status = 'replace', action='write')
 
 
     float_force = -65;
@@ -231,7 +231,7 @@ allocate(tkm(neq,(2*nband+1)),tmm(neq,(2*nband+1)),tgykm(neq,(2*nband+1)),tctkm(
 	write(*,*)"开始进入时间步循环："
 	ts =0.0;
 !timeloop:do ts=0,30,dt	
-timeloop:do while(ts<=20.0) !自适应步长 dt
+timeloop:do while(ts<=100.0) !自适应步长 dt
 	if(dt0<=0.0)then;write(*,*)"时间步长<0,退出!!!";exit timeloop;end if 
 	!if(dt0<=0.0001)then;dt0 = 0.01;end if
 	dt =dt0;
@@ -286,21 +286,21 @@ timeloop:do while(ts<=20.0) !自适应步长 dt
 					ttv_a(g(2:3))=0.0;ttv_a(g(4:6))=0.0;
 					tta_a(g(2:3))=0.0;tta_a(g(4:6))=0.0;
 					
-					!ttd(g(1)) = -amp*sin(omego*(ts+dt));
-					!ttv(g(1)) = -amp*omego*cos(omego*(ts+dt));
-					!tta(g(1)) = amp*omego*omego*sin(omego*(ts+dt));	
-					!
-					!ttd_a(g(1)) = -((1-alpha_f)*amp*sin(omego*(ts+dt))+alpha_f*amp*sin(omego*(ts)));
-					!ttv_a(g(1)) = -((1-alpha_f)*amp*omego*cos(omego*(ts+dt))+alpha_f*amp*omego*cos(omego*(ts)));
-					!tta_a(g(1)) = (1-alpha_m)*amp*omego*omego*sin(omego*(ts+dt))+alpha_m*amp*omego*omego*sin(omego*(ts));	
+					ttd(g(1)) = -amp*sin(omego*(ts+dt));
+					ttv(g(1)) = -amp*omego*cos(omego*(ts+dt));
+					tta(g(1)) = amp*omego*omego*sin(omego*(ts+dt));	
+					
+					ttd_a(g(1)) = -((1-alpha_f)*amp*sin(omego*(ts+dt))+alpha_f*amp*sin(omego*(ts)));
+					ttv_a(g(1)) = -((1-alpha_f)*amp*omego*cos(omego*(ts+dt))+alpha_f*amp*omego*cos(omego*(ts)));
+					tta_a(g(1)) = (1-alpha_m)*amp*omego*omego*sin(omego*(ts+dt))+alpha_m*amp*omego*omego*sin(omego*(ts));	
 					
 					!船实际测量母船升沉数据，频率10Hz.
-					ttd(g(1)) = -ocean_disp(ocean_step+1);
-					ttv(g(1)) = -ocean_vel(ocean_step+1);
-					tta(g(1)) = -ocean_acc(ocean_step+1);
-                    ttd_a(g(1)) = -((1-alpha_f)*ocean_disp(ocean_step+1)+alpha_f*ocean_disp(ocean_step));
-					ttv_a(g(1)) = -((1-alpha_f)*ocean_vel(ocean_step+1)+alpha_f*ocean_vel(ocean_step));
-					tta_a(g(1)) = -((1-alpha_m)*ocean_acc(ocean_step+1)+alpha_m*ocean_acc(ocean_step));
+					!ttd(g(1)) = -ocean_disp(ocean_step+1);
+					!ttv(g(1)) = -ocean_vel(ocean_step+1);
+					!tta(g(1)) = -ocean_acc(ocean_step+1);
+     !               ttd_a(g(1)) = -((1-alpha_f)*ocean_disp(ocean_step+1)+alpha_f*ocean_disp(ocean_step));
+					!ttv_a(g(1)) = -((1-alpha_f)*ocean_vel(ocean_step+1)+alpha_f*ocean_vel(ocean_step));
+					!tta_a(g(1)) = -((1-alpha_m)*ocean_acc(ocean_step+1)+alpha_m*ocean_acc(ocean_step));
 				end if
 				
 				! extract the displacement of an element from the total
@@ -346,8 +346,13 @@ timeloop:do while(ts<=20.0) !自适应步长 dt
 					!求解单位参考长梁截面合应力与合应力偶
 					CALL nfcmr_get(nfc,mr,cnm,rtxc_p,tphai_p);!当E1=(1,0,0)时
 					!求解单位参考长梁截面合外力与合外力偶									
-					CALL nmrbar_get(nbar,mrbar,perwet,rhoaw,diacab,elxc,dxc,d2xc,rmtx,points1,k,wtvel);!水下情形
-					!nbar=(/29.7,0.0,0.0/);mrbar=0.0;
+					
+                    if(iel>=range .and. iel<=(range+loaded_nodes)) then
+                        CALL nmrbar_get(nbar,mrbar,perwet,rhoaw,diacab,0.2-diacab,elxc,dxc,d2xc,rmtx,points1,k,wtvel);!水下情形
+                    else
+                        CALL nmrbar_get(nbar,mrbar,perwet,rhoaw,diacab,0.0,elxc,dxc,d2xc,rmtx,points1,k,wtvel);!水下情形
+                        end if
+                        !nbar=(/29.7,0.0,0.0/);mrbar=0.0;
 
 					!求解单元刚度矩阵中的BTCBK矩阵
 					CALL btcbk_get(btcbk,bmtx,rmtx,tmtx,rtxc_p,nfc,mr,cst,cst_p,phai_p,phai,cnm,fi);					
@@ -529,7 +534,10 @@ timeloop:do while(ts<=20.0) !自适应步长 dt
 			v0 = ttv;
 			a0 = tta;
 !------------------------修改结点力-------------------
-            val(:,1) = float_force-floatMass*a0(range*6+1:(range+loaded_nodes)*6+1:6);            
+            val(:,1) = float_force-floatMass*a0(range*6+1:(range+loaded_nodes)*6+1:6);   
+           
+           ! CALL nmrbar_get(nbar,mrbar,perwet,rhoaw,diacab,elxc,dxc,d2xc,rmtx,points1,k,wtvel);!水下情形
+
 !------------------------------------------------------
             
 			!当收敛后，求单元内部节点力,也即铠缆张力
@@ -562,7 +570,9 @@ timeloop:do while(ts<=20.0) !自适应步长 dt
 					CALL nfcmr_get(nfc,mr,cnm,rtxc_p,tphai_p);!当E1=(1,0,0)时
 					!求解单元刚度矩阵中的BTCBK矩阵
 					CALL btcbk_get(btcbk,bmtx,rmtx,tmtx,rtxc_p,nfc,mr,cst,cst_p,phai_p,phai,cnm,fi);
-					!单元内部节点力(12,1)
+				
+                    
+                    !单元内部节点力(12,1)
 					CALL intfcmx_get(intfcmx,nfc,mr);
 					eintfc = eintfc + matmul(transpose(matmul(bmtx,qmtx)),intfcmx)*jacobi*weights1(k);							
 				end do
@@ -585,7 +595,7 @@ timeloop:do while(ts<=20.0) !自适应步长 dt
 			!write(11,"(a)")"The iterations has overpassed the LIMIT number!";
 			exit timeloop;
 		end if 
-	ocean_step = ocean_step+1;	
+	ocean_step = ts/0.1+1;	
 	ts = ts + dt ;	
 		write(*,*)"The current time is:",ts;
 	if(iters<2.and.(dt0)<0.1)then;dt0 = dt0*2.0;

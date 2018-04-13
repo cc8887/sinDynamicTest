@@ -268,14 +268,14 @@ real::E1(3)=(/1.0,0.0,0.0/);
 return
 end subroutine nfcmr_get
 !------------------------求解单位长梁截面合外力与合外力偶---------------------------------
-subroutine nmrbar_get(nbar,mrbar,perwet,rhoaw,diacab,elxc,dxc,d2xc,rmtx,points,k,wtvel0)! dynamic analysis
+subroutine nmrbar_get(nbar,mrbar,perwet,rhoaw,diacab,floatDiacab,elxc,dxc,d2xc,rmtx,points,k,wtvel0)! dynamic analysis
 !subroutine nmrbar_get(nbar,mrbar,perwet,rhoaw,diacab,rmtx,wtvel0);!static analysis，常速海流
 !subroutine nmrbar_get(nbar,mrbar,perwet,rhoaw,diacab,rmtx,elxc,points,k,wtvel0);!static analysis,递减海流
 implicit none
 	!以el-开头的表示单元节点值，如elxc,elphai
 	real,intent(out)::nbar(:),mrbar(:);
 	integer,intent(in)::k;
-	real,intent(in)::rhoaw,diacab,perwet,rmtx(:,:),wtvel0(:);
+	real,intent(in)::rhoaw,diacab,perwet,rmtx(:,:),wtvel0(:),floatDiacab;
 	real,intent(in)::elxc(:,:),dxc(:),d2xc(:),points(:,:);!动态分析时打开
 	!real,intent(in)::elxc(:,:),points(:,:);!递减海流时打开，静态
 	real::gravity(3),gforce(3),buofc(3),addmass(3),cm,zguass,z1,z2,xi,vcu(3),wtvel(3),&
@@ -314,7 +314,7 @@ implicit none
 		!write(11,*)"wtvel",wtvel;
 	!write(11,*)rmtx
 	!局部坐标系下的水阻力【有海流时考虑】
-	fdl(1)= -0.5*rhoaw*cd1*pi*diacab*vr(1)*abs(vr(1));!切向
+	fdl(1)= -0.5*rhoaw*cd1*pi*(diacab+floatDiacab)*vr(1)*abs(vr(1));!切向
 	fdl(2)= -0.5*rhoaw*cd2*diacab*vr(2)*sqrt(abs(vr(2)**2+vr(3)**2));!法向
 	fdl(3)= -0.5*rhoaw*cd3*diacab*vr(3)*sqrt(abs(vr(2)**2+vr(3)**2));!法向
 		!write(11,*)"fdl",fdl;	
