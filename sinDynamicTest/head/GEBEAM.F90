@@ -286,14 +286,14 @@ implicit none
 	cd1 =0.02; !水阻力系数,切向
 	cd2 =2.0;  !水阻力系数,法向
 	cd3 =2.0;  !水阻力系数,法向
-	zall = 5000;!全海深
+	zall = 6000;!全海深
 
 
 	xi=points(k,1); 
 	z1 = elxc(1,1);!节点1的z值，当前值
 	z2 = elxc(2,1);!节点2的z值，当前值
 	!gravity=(/9.8,0.0,0.0/);!or -9.8m/s2
-	!E2 = (/0.0,diacab*0.5,0.0/);! X轴垂直向下，Y轴向右，Z轴垂直纸面向外
+	E2 = (/0.0,diacab*0.5,0.0/);! X轴垂直向下，Y轴向右，Z轴垂直纸面向外
 
 	!单位体积的重力矢量
 	!gforce=rhoac*gravity;
@@ -303,31 +303,31 @@ implicit none
 	!addmass=rhoaw*cm*pi/4.0*diacab*diacab*d2xc;
 	
 	!单位缆长的水阻力矢量
-	!!zguass=(xi+1)/2.0*(z2-z1)+z1;!高斯点对应的实际深度值		
+	zguass=(xi+1)/2.0*(z2-z1)+z1;!高斯点对应的实际深度值		
 	!全深度h下的海流流速函数
-	!!wtvel = wtvel0*(1.0-zguass/zall);!单元高斯点对应的海流
+	wtvel = wtvel0*(1.0-zguass/zall);!单元高斯点对应的海流
 	
 	!wtvel = wtvel0![全深度等海流时打开]
 	
 	!vr=matmul(transpose(rmtx),(-wtvel));!static,无升沉有海流
-	!!vr=matmul(transpose(rmtx),(dxc-wtvel));!dynamic，高斯点上的相对速度：[缆索速度-水流速度]；
+	vr=matmul(transpose(rmtx),(dxc-wtvel));!dynamic，高斯点上的相对速度：[缆索速度-水流速度]；
 		!write(11,*)"wtvel",wtvel;
 	!write(11,*)rmtx
 	!局部坐标系下的水阻力【有海流时考虑】
-	!!fdl(1)= -0.5*rhoaw*cd1*pi*diacab*vr(1)*abs(vr(1));!切向
-	!!fdl(2)= -0.5*rhoaw*cd2*diacab*vr(2)*sqrt(abs(vr(2)**2+vr(3)**2));!法向
-	!!fdl(3)= -0.5*rhoaw*cd3*diacab*vr(3)*sqrt(abs(vr(2)**2+vr(3)**2));!法向
+	fdl(1)= -0.5*rhoaw*cd1*pi*diacab*vr(1)*abs(vr(1));!切向
+	fdl(2)= -0.5*rhoaw*cd2*diacab*vr(2)*sqrt(abs(vr(2)**2+vr(3)**2));!法向
+	fdl(3)= -0.5*rhoaw*cd3*diacab*vr(3)*sqrt(abs(vr(2)**2+vr(3)**2));!法向
 		!write(11,*)"fdl",fdl;	
 	!整体坐标系下的水阻力【有海流时考虑】
-	!!fdg= matmul(rmtx,fdl);
+	fdg= matmul(rmtx,fdl);
 		!write(11,*)"the hydrodynamic forces:-------------------------"
 		!write(11,*)fdg;
 	!单位缆长合外力与合外力偶
-	!!nbar= (/perwet,0.0,0.0/)+fdg;!有海流情形
+	nbar= (/perwet,0.0,0.0/)+fdg;!有海流情形
 	
 	!静水条件下的单位缆长水阻力【无海流时考虑】
-	fdl(1)= -0.5*rhoaw*cd1*pi*diacab*dxc(1)*abs(dxc(1));!切向
-	nbar= (/perwet+fdl(1),0.0,0.0/);!无海流情形
+	!fdl(1)= -0.5*rhoaw*cd1*pi*diacab*dxc(1)*abs(dxc(1));!切向
+	!nbar= (/perwet+fdl(1),0.0,0.0/);!无海流情形
 	
 	!mrbar= cross_product(matmul(rmtx,E2),fdg);
 	!mrbar= cross_product(E2,fdg);

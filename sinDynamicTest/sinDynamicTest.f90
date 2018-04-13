@@ -44,7 +44,7 @@ real,allocatable::ekm(:,:),ekm_g(:,:),emm(:,:),egykm(:,:),ectkm(:,:),tkm(:,:),tm
 integer,allocatable::nf(:,:),num(:),g_num(:,:),g(:), g_g(:,:);
 				 
 !-----------------------input and initialisation-------------------------------
-open (11 , file = 'cable.res' , status = 'replace', action='write')
+!open (11 , file = 'cable.res' , status = 'replace', action='write')
 open (13 , file = 'G:\桌面\动力学模型\YXYBC3\SIACAB\Dynamic_1\General alpha 1\UMBILICAL\data back\ocean_1\ocean_1_disp.txt' , status = 'old' ,    action ='read')!船测量的船升沉位移，频率为10Hz.
 open (14 , file = 'G:\桌面\动力学模型\YXYBC3\SIACAB\Dynamic_1\General alpha 1\UMBILICAL\data back\ocean_1\ocean_1_vel.txt' , status = 'old' ,    action ='read')!船测量的船升沉速度，频率为10Hz.
 open (15 , file = 'G:\桌面\动力学模型\YXYBC3\SIACAB\Dynamic_1\General alpha 1\UMBILICAL\data back\ocean_1\ocean_1_acc.txt' , status = 'old' ,    action ='read')!船测量的船升沉加速度，频率为10Hz.
@@ -180,7 +180,7 @@ allocate(tkm(neq,(2*nband+1)),tmm(neq,(2*nband+1)),tgykm(neq,(2*nband+1)),tctkm(
 	do k=1,nels 
 		write(11,'(a,i5,a,3i4)') "Element ",k,"      ",g_num(:,k);                    			 
 	end do;
-	write(11,'(2(a,i5),/)')"There are ",neq,"  equations and the half-bandwidth is ",nband  
+	!write(11,'(2(a,i5),/)')"There are ",neq,"  equations and the half-bandwidth is ",nband  
 !------------------------------GET SEA STATE----------------------------------------------
 	!理想正弦运动
 	amp = 0.67; period = 7;! the 4 sea state;
@@ -231,7 +231,7 @@ allocate(tkm(neq,(2*nband+1)),tmm(neq,(2*nband+1)),tgykm(neq,(2*nband+1)),tctkm(
 	write(*,*)"开始进入时间步循环："
 	ts =0.0;
 !timeloop:do ts=0,30,dt	
-timeloop:do while(ts<=100.0) !自适应步长 dt
+timeloop:do while(ts<=20.0) !自适应步长 dt
 	if(dt0<=0.0)then;write(*,*)"时间步长<0,退出!!!";exit timeloop;end if 
 	!if(dt0<=0.0001)then;dt0 = 0.01;end if
 	dt =dt0;
@@ -573,22 +573,24 @@ timeloop:do while(ts<=100.0) !自适应步长 dt
 			end do !nels when converged
 			
 			!换两行后输出
-			write(11,'(a,F10.5)')"--------------------Computed time histories at time:---------------------------  ",ts;
-			write(11,"(a,i5,a,/)")"Oh,my God,Converged need ",iters," iterations!"				
-			write(11,'(a)')"NODE:                     DISPLACEMENT:        "
+		!	write(11,'(a,F10.5)')"--------------------Computed time histories at time:---------------------------  ",ts;
+			!write(11,"(a,i5,a,/)")"Oh,my God,Converged need ",iters," iterations!"				
+			!write(11,'(a)')"NODE:                     DISPLACEMENT:        "
 			do i=1,nn
-				write(11,"(f10.3,i5,6e12.4),//") ts,i,d0(nf(1:3,i));
+				!write(11,"(f10.3,i5,6e12.4),//") ts,i,d0(nf(1:3,i));
 				write(12,"(f10.3,',',i5,',',3(e15.6,','),3(e15.6,','),3(e15.6,','),3(e15.6,','),e15.6)") ts,i,d0(nf(1:3,i))+g_coord(:,i),d0(nf(1:3,i)),v0(nf(1:3,i)),a0(nf(1:3,i)),tt_intfc(nf(1,i));!保存文件为.csv格式
             end do
             write(17,"(f10.3,','(e15.6,','),(e15.6,','),(e15.6,','),(e15.6,','))")ts,d0(nf(1,1)),tt_intfc(nf(1,1)),d0(nf(1,nn)),tt_intfc(nf(1,nn))
 		if(iters == limit)then
-			write(11,"(a)")"The iterations has overpassed the LIMIT number!";
+			!write(11,"(a)")"The iterations has overpassed the LIMIT number!";
 			exit timeloop;
 		end if 
 	ocean_step = ocean_step+1;	
 	ts = ts + dt ;	
 		write(*,*)"The current time is:",ts;
-	if(iters<2.and.(dt0)<0.1)then;dt0 = dt0*2.0;write(11,*)"The dt is added at last!";end if !迭代次数减少时，要增加步长;
+	if(iters<2.and.(dt0)<0.1)then;dt0 = dt0*2.0;
+        !write(11,*)"The dt is added at last!";
+    end if !迭代次数减少时，要增加步长;
 		!write(11,"(a,i5)")"the main iters:-----",iters;		
 end do timeloop
 end program cable
